@@ -64,7 +64,7 @@ export default function Book() {
 
         <button
           onClick={handleSubmit}
-          className="bg-blue-600 text-white w-full py-3 rounded-lg hover:bg-blue-700"
+          className="bg-blue-600 text-white w-full py-3 rounded-lg hover:bg-green-600 transition-colors cursor-pointer"
         >
           Confirm Booking
         </button>
