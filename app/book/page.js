@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import LoadingSpinner from "../../components/LoadingSpinner";
+import { useToast } from "../../components/ToastProvider";
 import { supabase } from "../../lib/supabaseClient";
 
 function getServiceMeta(name = "") {
@@ -125,33 +127,44 @@ export default function Book() {
   const [address, setAddress] = useState("");
   const [isLoadingServices, setIsLoadingServices] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const toast = useToast();
 
   async function getServices() {
-    const { data } = await supabase.from("services").select("*");
-    return data || [];
+    const { data, error } = await supabase.from("services").select("*");
+    return { data: data || [], error };
   }
 
   useEffect(() => {
     let isMounted = true;
 
-    getServices().then((data) => {
+    getServices().then(({ data, error }) => {
       if (isMounted) {
         setServices(data);
         setIsLoadingServices(false);
+
+        if (error) {
+          toast.error(
+            "Unable to load services",
+            error.message || "Try refreshing the page."
+          );
+        }
       }
     });
 
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [toast]);
 
   const selectedService = services.find((item) => item.name === service) || null;
   const selectedServiceMeta = getServiceMeta(selectedService?.name);
 
   async function handleSubmit() {
     if (!service || !address.trim()) {
-      alert("Please select a service and enter your address.");
+      toast.error(
+        "Missing details",
+        "Please select a service and enter your address."
+      );
       return;
     }
 
@@ -164,15 +177,18 @@ export default function Book() {
       },
     ]);
 
-    setIsSubmitting(false);
-
     if (!error) {
-      alert("Order placed successfully!");
+      toast.success(
+        "Booking confirmed",
+        "Your laundry order was placed successfully."
+      );
       setService("");
       setAddress("");
     } else {
-      alert("Error placing order");
+      toast.error("Booking failed", error.message || "Please try again.");
     }
+
+    setIsSubmitting(false);
   }
 
   return (
@@ -197,12 +213,12 @@ export default function Book() {
 
             <div className="mt-8 space-y-3">
               {isLoadingServices ? (
-                Array.from({ length: 3 }).map((_, index) => (
-                  <div
-                    key={index}
-                    className="h-20 animate-pulse rounded-2xl border border-white/10 bg-white/5"
-                  />
-                ))
+                <div className="flex h-48 items-center justify-center rounded-2xl border border-white/10 bg-white/5">
+                  <div className="flex flex-col items-center gap-3 text-sm text-slate-300">
+                    <LoadingSpinner size="lg" tone="light" />
+                    <p>Loading services...</p>
+                  </div>
+                </div>
               ) : services.length === 0 ? (
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-slate-300">
                   No services are available right now.
@@ -381,7 +397,14 @@ export default function Book() {
                 disabled={isSubmitting || !service || !address.trim()}
                 className="inline-flex w-full items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-950/15 transition-all duration-200 hover:-translate-y-0.5 hover:bg-sky-600 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
               >
-                {isSubmitting ? "Booking..." : "Confirm Booking"}
+                {isSubmitting ? (
+                  <span className="inline-flex items-center gap-2">
+                    <LoadingSpinner size="sm" tone="light" />
+                    Booking...
+                  </span>
+                ) : (
+                  "Confirm Booking"
+                )}
               </button>
             </div>
           </section>

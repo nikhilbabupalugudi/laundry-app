@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import LoadingSpinner from "../../components/LoadingSpinner";
+import { useToast } from "../../components/ToastProvider";
 import { supabase } from "../../lib/supabaseClient";
 
 function normalizeStatus(status) {
@@ -55,42 +57,70 @@ export default function Admin() {
   const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeOrderId, setActiveOrderId] = useState(null);
+  const toast = useToast();
 
   async function getOrders() {
-    const { data } = await supabase.from("orders").select("*");
-    return data || [];
+    const { data, error } = await supabase.from("orders").select("*");
+    return { data: data || [], error };
   }
 
   useEffect(() => {
     let isMounted = true;
 
-    getOrders().then((data) => {
+    getOrders().then(({ data, error }) => {
       if (isMounted) {
         setOrders(data);
         setIsLoading(false);
+
+        if (error) {
+          toast.error(
+            "Unable to load orders",
+            error.message || "Try refreshing the dashboard."
+          );
+        }
       }
     });
 
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [toast]);
 
   async function fetchOrders() {
-    const data = await getOrders();
+    const { data, error } = await getOrders();
     setOrders(data);
+    return { error };
   }
 
   async function updateStatus(id, newStatus) {
     setActiveOrderId(id);
 
-    await supabase
+    const { error } = await supabase
       .from("orders")
       .update({ status: newStatus })
       .eq("id", id);
 
-    await fetchOrders();
+    if (error) {
+      setActiveOrderId(null);
+      toast.error("Status update failed", error.message || "Please try again.");
+      return;
+    }
+
+    const refreshResult = await fetchOrders();
     setActiveOrderId(null);
+
+    if (refreshResult.error) {
+      toast.error(
+        "Updated, but refresh failed",
+        refreshResult.error.message || "Reload the dashboard to verify the latest state."
+      );
+      return;
+    }
+
+    toast.success(
+      "Order updated",
+      `Order ${id} was marked as ${getStatusLabel(newStatus).toLowerCase()}.`
+    );
   }
 
   const pendingOrders = orders.filter(
@@ -117,7 +147,14 @@ export default function Admin() {
           disabled={isUpdating}
           className="inline-flex items-center justify-center rounded-xl bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-green-300"
         >
-          {isUpdating ? "Updating..." : "Accept"}
+          {isUpdating ? (
+            <span className="inline-flex items-center gap-2">
+              <LoadingSpinner size="sm" tone="light" />
+              Updating...
+            </span>
+          ) : (
+            "Accept"
+          )}
         </button>
 
         <button
@@ -125,7 +162,14 @@ export default function Admin() {
           disabled={isUpdating}
           className="inline-flex items-center justify-center rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-red-300"
         >
-          {isUpdating ? "Updating..." : "Reject"}
+          {isUpdating ? (
+            <span className="inline-flex items-center gap-2">
+              <LoadingSpinner size="sm" tone="light" />
+              Updating...
+            </span>
+          ) : (
+            "Reject"
+          )}
         </button>
       </div>
     );
@@ -168,13 +212,11 @@ export default function Admin() {
         </header>
 
         {isLoading ? (
-          <div className="grid gap-4">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <div
-                key={index}
-                className="h-32 animate-pulse rounded-3xl border border-slate-200 bg-white shadow-sm"
-              />
-            ))}
+          <div className="flex min-h-80 items-center justify-center rounded-3xl border border-slate-200 bg-white shadow-sm">
+            <div className="flex flex-col items-center gap-3 text-sm text-slate-600">
+              <LoadingSpinner size="lg" />
+              <p>Loading dashboard data...</p>
+            </div>
           </div>
         ) : orders.length === 0 ? (
           <EmptyState />

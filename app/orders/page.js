@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import LoadingSpinner from "../../components/LoadingSpinner";
+import { useToast } from "../../components/ToastProvider";
 import { supabase } from "../../lib/supabaseClient";
 
 function normalizeStatus(status) {
@@ -85,6 +87,7 @@ export default function Orders() {
   const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const toast = useToast();
 
   async function fetchOrders(event) {
     event?.preventDefault();
@@ -94,19 +97,38 @@ export default function Orders() {
     if (!trimmedAddress) {
       setOrders([]);
       setHasSearched(false);
+      toast.error("Address required", "Enter an address to search for orders.");
       return;
     }
 
     setIsLoading(true);
     setHasSearched(true);
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("orders")
       .select("*")
       .ilike("address", `%${trimmedAddress}%`);
 
-    setOrders(data || []);
+    if (error) {
+      setOrders([]);
+      setIsLoading(false);
+      toast.error("Search failed", error.message || "Please try again.");
+      return;
+    }
+
+    const nextOrders = data || [];
+
+    setOrders(nextOrders);
     setIsLoading(false);
+
+    if (nextOrders.length > 0) {
+      toast.success(
+        "Orders found",
+        `${nextOrders.length} matching order${nextOrders.length === 1 ? "" : "s"} found.`
+      );
+    } else {
+      toast.info("No orders found", `No orders matched "${trimmedAddress}".`);
+    }
   }
 
   return (
@@ -171,7 +193,14 @@ export default function Orders() {
                 disabled={isLoading || !address.trim()}
                 className="mt-4 inline-flex w-full items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-950/15 transition-all duration-200 hover:-translate-y-0.5 hover:bg-sky-600 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
               >
-                {isLoading ? "Searching..." : "Search Orders"}
+                {isLoading ? (
+                  <span className="inline-flex items-center gap-2">
+                    <LoadingSpinner size="sm" tone="light" />
+                    Searching...
+                  </span>
+                ) : (
+                  "Search Orders"
+                )}
               </button>
             </form>
           </div>
@@ -198,13 +227,11 @@ export default function Orders() {
           </div>
 
           {isLoading ? (
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {Array.from({ length: 3 }).map((_, index) => (
-                <div
-                  key={index}
-                  className="h-44 animate-pulse rounded-3xl border border-slate-200 bg-white shadow-sm"
-                />
-              ))}
+            <div className="flex min-h-64 items-center justify-center rounded-3xl border border-slate-200 bg-white shadow-sm">
+              <div className="flex flex-col items-center gap-3 text-sm text-slate-600">
+                <LoadingSpinner size="lg" />
+                <p>Fetching matching orders...</p>
+              </div>
             </div>
           ) : !hasSearched ? (
             <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center shadow-sm">
