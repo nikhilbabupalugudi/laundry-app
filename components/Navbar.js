@@ -99,7 +99,7 @@ function NavItem({ href, label, icon: Icon, isActive, isMobile, onClick }) {
           : "inline-flex items-center gap-2 px-3 py-3",
         isActive
           ? "font-semibold text-sky-700"
-          : "font-medium text-slate-600 hover:text-slate-900",
+          : "font-medium text-slate-600 hover:text-sky-700",
       ].join(" ")}
     >
       <span
@@ -169,7 +169,7 @@ export default function Navbar() {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-1 md:flex">
+        <nav className="hidden items-center gap-2 md:flex">
           {navLinks.map((link) => (
             <NavItem
               key={link.href}
