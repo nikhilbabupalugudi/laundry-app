@@ -247,6 +247,15 @@ export default function Admin() {
 
                   <div className="mt-5">
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                      Mobile Number
+                    </p>
+                    <p className="mt-2 text-sm text-slate-600">
+                      {order.mobile_number || "Not provided"}
+                    </p>
+                  </div>
+
+                  <div className="mt-5">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                       Address
                     </p>
                     <p className="mt-2 text-sm leading-6 text-slate-600">
@@ -272,6 +281,9 @@ export default function Admin() {
                       Address
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                      Mobile Number
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
                       Status
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
@@ -291,6 +303,9 @@ export default function Admin() {
                       </td>
                       <td className="px-6 py-5 text-sm text-slate-600">
                         {order.address}
+                      </td>
+                      <td className="px-6 py-5 text-sm text-slate-600">
+                        {order.mobile_number || "Not provided"}
                       </td>
                       <td className="px-6 py-5">
                         <span
