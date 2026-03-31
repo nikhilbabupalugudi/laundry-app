@@ -9,6 +9,15 @@ function normalizeStatus(status) {
   return status?.toLowerCase() || "pending";
 }
 
+function normalizeMobileNumber(value = "") {
+  return value.replace(/\D/g, "");
+}
+
+function isValidMobileNumber(value = "") {
+  const normalizedValue = normalizeMobileNumber(value);
+  return normalizedValue.length >= 10 && normalizedValue.length <= 15;
+}
+
 function getStatusBadgeClasses(status) {
   const normalizedStatus = normalizeStatus(status);
 
@@ -83,7 +92,7 @@ function StatusIcon({ status, className = "h-5 w-5" }) {
 }
 
 export default function Orders() {
-  const [address, setAddress] = useState("");
+  const [mobileNumber, setMobileNumber] = useState("");
   const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
@@ -92,12 +101,26 @@ export default function Orders() {
   async function fetchOrders(event) {
     event?.preventDefault();
 
-    const trimmedAddress = address.trim();
+    const trimmedMobileNumber = mobileNumber.trim();
+    const normalizedMobileNumber = normalizeMobileNumber(trimmedMobileNumber);
 
-    if (!trimmedAddress) {
+    if (!trimmedMobileNumber) {
       setOrders([]);
       setHasSearched(false);
-      toast.error("Address required", "Enter an address to search for orders.");
+      toast.error(
+        "Mobile number required",
+        "Enter your mobile number to track orders."
+      );
+      return;
+    }
+
+    if (!isValidMobileNumber(trimmedMobileNumber)) {
+      setOrders([]);
+      setHasSearched(false);
+      toast.error(
+        "Invalid mobile number",
+        "Enter a valid mobile number with 10 to 15 digits."
+      );
       return;
     }
 
@@ -107,7 +130,7 @@ export default function Orders() {
     const { data, error } = await supabase
       .from("orders")
       .select("*")
-      .ilike("address", `%${trimmedAddress}%`);
+      .eq("mobile_number", normalizedMobileNumber);
 
     if (error) {
       setOrders([]);
@@ -127,7 +150,10 @@ export default function Orders() {
         `${nextOrders.length} matching order${nextOrders.length === 1 ? "" : "s"} found.`
       );
     } else {
-      toast.info("No orders found", `No orders matched "${trimmedAddress}".`);
+      toast.info(
+        "No orders found",
+        `No orders matched mobile number "${trimmedMobileNumber}".`
+      );
     }
   }
 
@@ -146,8 +172,9 @@ export default function Orders() {
                 Track your laundry orders in one place
               </h1>
               <p className="mt-4 text-sm leading-7 text-slate-600 sm:text-base">
-                Search by address to see every related order, its current
-                status, and whether it is pending, accepted, or rejected.
+                Search by your mobile number to see every related order, its
+                current status, and whether it is pending, accepted, or
+                rejected.
               </p>
             </div>
 
@@ -156,10 +183,10 @@ export default function Orders() {
               className="rounded-3xl border border-slate-200 bg-slate-50 p-5 shadow-sm sm:p-6"
             >
               <label
-                htmlFor="address"
+                htmlFor="mobileNumber"
                 className="text-sm font-medium text-slate-700"
               >
-                Search by address
+                Search by mobile number
               </label>
 
               <div className="relative mt-3">
@@ -173,24 +200,25 @@ export default function Orders() {
                     strokeLinejoin="round"
                     className="h-5 w-5"
                   >
-                    <path d="M12 21s6-4.4 6-10a6 6 0 1 0-12 0c0 5.6 6 10 6 10Z" />
-                    <path d="M12 13.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
+                    <path d="M7 4h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" />
+                    <path d="M11 17h2" />
                   </svg>
                 </div>
 
                 <input
-                  id="address"
-                  type="text"
-                  placeholder="Enter address or part of an address"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
+                  id="mobileNumber"
+                  type="tel"
+                  inputMode="numeric"
+                  placeholder="Enter mobile number"
+                  value={mobileNumber}
+                  onChange={(e) => setMobileNumber(e.target.value)}
                   className="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-12 pr-4 text-sm text-slate-900 shadow-sm transition-all duration-200 hover:border-sky-300 focus:border-sky-400 focus:outline-none focus:ring-4 focus:ring-sky-100"
                 />
               </div>
 
               <button
                 type="submit"
-                disabled={isLoading || !address.trim()}
+                disabled={isLoading || !mobileNumber.trim()}
                 className="mt-4 inline-flex w-full items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-950/15 transition-all duration-200 hover:-translate-y-0.5 hover:bg-sky-600 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
               >
                 {isLoading ? (
@@ -215,7 +243,7 @@ export default function Orders() {
               <p className="mt-1 text-sm text-slate-600">
                 {hasSearched
                   ? `${orders.length} order${orders.length === 1 ? "" : "s"} found`
-                  : "Search by address to view matching orders"}
+                  : "Search by mobile number to view matching orders"}
               </p>
             </div>
 
@@ -239,7 +267,8 @@ export default function Orders() {
                 Start tracking an order
               </h3>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Enter an address above to search for related laundry orders.
+                Enter your mobile number above to search for related laundry
+                orders.
               </p>
             </div>
           ) : orders.length === 0 ? (
@@ -248,7 +277,10 @@ export default function Orders() {
                 No orders found
               </h3>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                No matching orders were found for <span className="font-medium text-slate-900">{address.trim()}</span>.
+                No matching orders were found for{" "}
+                <span className="font-medium text-slate-900">
+                  {mobileNumber.trim()}
+                </span>.
               </p>
             </div>
           ) : (
@@ -276,13 +308,24 @@ export default function Orders() {
                     </span>
                   </div>
 
-                  <div className="mt-6 rounded-2xl bg-slate-50 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                      Pickup Address
-                    </p>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">
-                      {order.address}
-                    </p>
+                  <div className="mt-6 grid gap-3">
+                    <div className="rounded-2xl bg-slate-50 p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                        Mobile Number
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-slate-600">
+                        {order.mobile_number || "Not provided"}
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl bg-slate-50 p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                        Pickup Address
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-slate-600">
+                        {order.address}
+                      </p>
+                    </div>
                   </div>
 
                   <div className="mt-5 flex items-center gap-3 text-sm text-slate-500">

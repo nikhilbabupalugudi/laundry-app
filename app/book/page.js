@@ -43,6 +43,15 @@ function getServiceMeta(name = "") {
   };
 }
 
+function normalizeMobileNumber(value = "") {
+  return value.replace(/\D/g, "");
+}
+
+function isValidMobileNumber(value = "") {
+  const normalizedValue = normalizeMobileNumber(value);
+  return normalizedValue.length >= 10 && normalizedValue.length <= 15;
+}
+
 function ServiceIcon({ name = "", className = "h-6 w-6" }) {
   const normalizedName = name.toLowerCase();
 
@@ -125,6 +134,7 @@ export default function Book() {
   const [services, setServices] = useState([]);
   const [service, setService] = useState("");
   const [address, setAddress] = useState("");
+  const [mobileNumber, setMobileNumber] = useState("");
   const [isLoadingServices, setIsLoadingServices] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const toast = useToast();
@@ -160,10 +170,21 @@ export default function Book() {
   const selectedServiceMeta = getServiceMeta(selectedService?.name);
 
   async function handleSubmit() {
-    if (!service || !address.trim()) {
+    const trimmedAddress = address.trim();
+    const normalizedMobileNumber = normalizeMobileNumber(mobileNumber);
+
+    if (!service || !trimmedAddress || !mobileNumber.trim()) {
       toast.error(
         "Missing details",
-        "Please select a service and enter your address."
+        "Please select a service, enter your address, and add a mobile number."
+      );
+      return;
+    }
+
+    if (!isValidMobileNumber(mobileNumber)) {
+      toast.error(
+        "Invalid mobile number",
+        "Enter a valid mobile number with 10 to 15 digits."
       );
       return;
     }
@@ -173,7 +194,8 @@ export default function Book() {
     const { error } = await supabase.from("orders").insert([
       {
         service_id: service,
-        address: address.trim(),
+        address: trimmedAddress,
+        mobile_number: normalizedMobileNumber,
       },
     ]);
 
@@ -184,6 +206,7 @@ export default function Book() {
       );
       setService("");
       setAddress("");
+      setMobileNumber("");
     } else {
       toast.error("Booking failed", error.message || "Please try again.");
     }
@@ -274,8 +297,8 @@ export default function Book() {
                 Schedule your next pickup
               </h2>
               <p className="mt-3 text-sm leading-7 text-slate-600 sm:text-base">
-                Pick a service from the list and enter the address where we
-                should collect your laundry.
+                Pick a service from the list and enter the address and mobile
+                number we should use for your laundry pickup.
               </p>
             </div>
 
@@ -360,6 +383,44 @@ export default function Book() {
 
               <div>
                 <label
+                  htmlFor="mobileNumber"
+                  className="mb-2 block text-sm font-medium text-slate-700"
+                >
+                  Mobile number
+                </label>
+                <div className="relative">
+                  <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-slate-400">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="h-5 w-5"
+                    >
+                      <path d="M7 4h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" />
+                      <path d="M11 17h2" />
+                    </svg>
+                  </div>
+
+                  <input
+                    id="mobileNumber"
+                    type="tel"
+                    inputMode="numeric"
+                    placeholder="Enter mobile number"
+                    value={mobileNumber}
+                    onChange={(e) => setMobileNumber(e.target.value)}
+                    className="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-12 pr-4 text-sm text-slate-900 shadow-sm transition-all duration-200 hover:border-sky-300 focus:border-sky-400 focus:outline-none focus:ring-4 focus:ring-sky-100"
+                  />
+                </div>
+                <p className="mt-2 text-xs text-slate-500">
+                  This number is required and will be used for order tracking.
+                </p>
+              </div>
+
+              <div>
+                <label
                   htmlFor="address"
                   className="mb-2 block text-sm font-medium text-slate-700"
                 >
@@ -394,7 +455,12 @@ export default function Book() {
 
               <button
                 onClick={handleSubmit}
-                disabled={isSubmitting || !service || !address.trim()}
+                disabled={
+                  isSubmitting ||
+                  !service ||
+                  !address.trim() ||
+                  !mobileNumber.trim()
+                }
                 className="inline-flex w-full items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-950/15 transition-all duration-200 hover:-translate-y-0.5 hover:bg-sky-600 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
               >
                 {isSubmitting ? (
