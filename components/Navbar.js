@@ -93,10 +93,10 @@ function NavItem({ href, label, icon: Icon, isActive, isMobile, onClick }) {
       href={href}
       onClick={onClick}
       className={[
-        "group relative overflow-hidden transition-all duration-300",
+        "group relative transition-colors duration-300",
         isMobile
-          ? "flex items-center gap-3 rounded-2xl px-4 py-3"
-          : "inline-flex items-center gap-2 px-3 py-3",
+          ? "flex items-center gap-3.5 rounded-2xl px-4 py-3.5"
+          : "inline-flex items-center gap-2.5 rounded-full px-4 py-3",
         isActive
           ? "font-semibold text-sky-700"
           : "font-medium text-slate-600 hover:text-sky-700",
@@ -114,13 +114,14 @@ function NavItem({ href, label, icon: Icon, isActive, isMobile, onClick }) {
         <Icon className={isMobile ? "h-5 w-5" : "h-[18px] w-[18px]"} />
       </span>
 
-      <span className="relative z-10 tracking-tight">{label}</span>
+      <span className="relative z-10 text-sm tracking-tight">{label}</span>
 
       <span
         className={[
-          "absolute bottom-1 left-3 h-0.5 rounded-full bg-sky-600 transition-all duration-300",
-          "right-3",
-          isActive ? "scale-x-100 opacity-100" : "scale-x-0 opacity-0 group-hover:scale-x-100 group-hover:opacity-100",
+          "absolute bottom-1.5 left-4 right-4 h-px rounded-full bg-sky-600/90 transition-all duration-300 ease-out",
+          isActive
+            ? "scale-x-100 opacity-100"
+            : "scale-x-0 opacity-0 group-hover:scale-x-100 group-hover:opacity-100",
         ].join(" ")}
         style={{ transformOrigin: "left center" }}
       />
@@ -142,7 +143,7 @@ export default function Navbar() {
         <Link
           href="/"
           onClick={closeMenu}
-          className="flex items-center gap-3 text-sky-600 transition-colors duration-200 hover:text-sky-700"
+          className="flex items-center gap-3.5 text-sky-600 transition-colors duration-300 hover:text-sky-700"
         >
           <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-50 text-sky-600 shadow-sm ring-1 ring-sky-100">
             <svg
@@ -161,15 +162,15 @@ export default function Navbar() {
             </svg>
           </span>
 
-          <span className="flex flex-col">
-            <span className="text-lg font-semibold tracking-tight">Laundry App</span>
-            <span className="text-xs font-medium uppercase tracking-[0.22em] text-slate-400">
+          <span className="flex flex-col leading-none">
+            <span className="text-lg font-semibold tracking-[-0.02em]">Laundry App</span>
+            <span className="mt-1 text-[11px] font-medium uppercase tracking-[0.24em] text-slate-400">
               Service Platform
             </span>
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-2 md:flex">
+        <nav className="hidden items-center gap-1 rounded-full border border-slate-200/80 bg-white px-2 py-1.5 shadow-sm md:flex">
           {navLinks.map((link) => (
             <NavItem
               key={link.href}
@@ -223,11 +224,13 @@ export default function Navbar() {
       >
         <div className="overflow-hidden">
           <nav
-            className={`px-4 py-4 transition-all duration-300 sm:px-6 ${
-              isOpen ? "translate-y-0" : "-translate-y-2"
+            className={`px-4 py-4 shadow-sm transition-all duration-300 sm:px-6 ${
+              isOpen
+                ? "translate-y-0 scale-100"
+                : "-translate-y-3 scale-[0.98]"
             }`}
           >
-            <div className="mx-auto flex max-w-7xl flex-col gap-2">
+            <div className="mx-auto flex max-w-7xl flex-col gap-1.5">
               {navLinks.map((link) => (
                 <NavItem
                   key={link.href}
