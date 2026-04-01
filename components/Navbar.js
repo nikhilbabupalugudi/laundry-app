@@ -89,43 +89,43 @@ const navLinks = [
 
 function NavItem({ href, label, icon: Icon, isActive, isMobile, onClick }) {
   return (
-    <Link
-      href={href}
-      onClick={onClick}
-      className={[
-        "group relative transition-colors duration-300",
-        isMobile
-          ? "flex items-center gap-3.5 rounded-2xl px-4 py-3.5"
-          : "inline-flex items-center gap-2.5 rounded-full px-4 py-3",
-        isActive
-          ? "font-semibold text-sky-700"
-          : "font-medium text-slate-600 hover:text-sky-700",
-      ].join(" ")}
-    >
-      <span
-        className={[
-          "inline-flex items-center justify-center rounded-xl transition-all duration-300",
-          isMobile ? "h-10 w-10" : "h-8 w-8",
-          isActive
-            ? "bg-sky-50 text-sky-700"
-            : "bg-slate-100 text-slate-500 group-hover:bg-sky-50 group-hover:text-sky-700",
-        ].join(" ")}
-      >
-        <Icon className={isMobile ? "h-5 w-5" : "h-[18px] w-[18px]"} />
-      </span>
+    // <Link
+    //   href={href}
+    //   onClick={onClick}
+    //   className={[
+    //     "group relative transition-colors duration-300",
+    //     isMobile
+    //       ? "flex items-center gap-3.5 rounded-2xl px-4 py-3.5"
+    //       : "inline-flex items-center gap-2.5 rounded-full px-4 py-3",
+    //     isActive
+    //       ? "font-semibold text-sky-700"
+    //       : "font-medium text-slate-600 hover:text-sky-700",
+    //   ].join(" ")}
+    // >
+    //   <span
+    //     className={[
+    //       "inline-flex items-center justify-center rounded-xl transition-all duration-300",
+    //       isMobile ? "h-10 w-10" : "h-8 w-8",
+    //       isActive
+    //         ? "bg-sky-50 text-sky-700"
+    //         : "bg-slate-100 text-slate-500 group-hover:bg-sky-50 group-hover:text-sky-700",
+    //     ].join(" ")}
+    //   >
+    //     <Icon className={isMobile ? "h-5 w-5" : "h-[18px] w-[18px]"} />
+    //   </span>
 
-      <span className="relative z-10 text-sm tracking-tight">{label}</span>
+    //   <span className="relative z-10 text-sm tracking-tight">{label}</span>
 
-      <span
-        className={[
-          "absolute bottom-1.5 left-4 right-4 h-px rounded-full bg-sky-600/90 transition-all duration-300 ease-out",
-          isActive
-            ? "scale-x-100 opacity-100"
-            : "scale-x-0 opacity-0 group-hover:scale-x-100 group-hover:opacity-100",
-        ].join(" ")}
-        style={{ transformOrigin: "left center" }}
-      />
-    </Link>
+    //   <span
+    //     className={[
+    //       "absolute bottom-1.5 left-4 right-4 h-px rounded-full bg-sky-600/90 transition-all duration-300 ease-out",
+    //       isActive
+    //         ? "scale-x-100 opacity-100"
+    //         : "scale-x-0 opacity-0 group-hover:scale-x-100 group-hover:opacity-100",
+    //     ].join(" ")}
+    //     style={{ transformOrigin: "left center" }}
+    //   />
+    // </Link>
   );
 }
 
