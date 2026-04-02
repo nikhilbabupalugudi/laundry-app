@@ -1,47 +1,54 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import { useToast } from "../../components/ToastProvider";
 import { supabase } from "../../lib/supabaseClient";
 
-function getServiceMeta(name = "") {
-  const normalizedName = name.toLowerCase();
+const SERVICE_OPTIONS = [
+  {
+    id: "washing",
+    name: "Washing",
+    price: 50,
+    description: "Fresh everyday cleaning for regular clothes and weekly loads.",
+    accent: "from-sky-500 to-cyan-400",
+    cardBg: "bg-sky-50",
+    cardBorder: "border-sky-200",
+    ring: "ring-sky-200",
+    iconBg: "bg-sky-100",
+    iconText: "text-sky-700",
+    badge: "bg-sky-100 text-sky-800",
+  },
+  {
+    id: "ironing",
+    name: "Ironing",
+    price: 10,
+    description: "Neat, wrinkle-free finishing for shirts, uniforms, and office wear.",
+    accent: "from-amber-500 to-orange-400",
+    cardBg: "bg-amber-50",
+    cardBorder: "border-amber-200",
+    ring: "ring-amber-200",
+    iconBg: "bg-amber-100",
+    iconText: "text-amber-700",
+    badge: "bg-amber-100 text-amber-800",
+  },
+  {
+    id: "dry-cleaning",
+    name: "Dry Cleaning",
+    price: 100,
+    description: "Careful treatment for delicate fabrics, suits, and premium garments.",
+    accent: "from-emerald-500 to-green-400",
+    cardBg: "bg-emerald-50",
+    cardBorder: "border-emerald-200",
+    ring: "ring-emerald-200",
+    iconBg: "bg-emerald-100",
+    iconText: "text-emerald-700",
+    badge: "bg-emerald-100 text-emerald-800",
+  },
+];
 
-  if (normalizedName.includes("wash")) {
-    return {
-      gradient: "from-sky-500 to-cyan-400",
-      bg: "bg-sky-50",
-      border: "border-sky-100",
-      description: "Fresh cleaning for everyday wear and routine laundry loads.",
-    };
-  }
-
-  if (normalizedName.includes("iron")) {
-    return {
-      gradient: "from-amber-500 to-orange-400",
-      bg: "bg-amber-50",
-      border: "border-amber-100",
-      description: "Smooth pressing for crisp shirts, uniforms, and special outfits.",
-    };
-  }
-
-  if (normalizedName.includes("dry")) {
-    return {
-      gradient: "from-emerald-500 to-green-400",
-      bg: "bg-emerald-50",
-      border: "border-emerald-100",
-      description: "Gentle care for delicate fabrics, suits, and premium garments.",
-    };
-  }
-
-  return {
-    gradient: "from-slate-500 to-slate-400",
-    bg: "bg-slate-100",
-    border: "border-slate-200",
-    description: "Professional laundry care with reliable pickup and tracking.",
-  };
-}
+const inputClasses =
+  "w-full rounded-2xl border border-slate-200 bg-white py-3.5 pl-12 pr-4 text-sm text-slate-900 shadow-sm outline-none transition-all duration-200 placeholder:text-slate-400 hover:border-slate-300 focus:border-slate-900 focus:ring-4 focus:ring-slate-200/70";
 
 function normalizeMobileNumber(value = "") {
   return value.replace(/\D/g, "");
@@ -52,10 +59,8 @@ function isValidMobileNumber(value = "") {
   return normalizedValue.length >= 10 && normalizedValue.length <= 15;
 }
 
-function ServiceIcon({ name = "", className = "h-6 w-6" }) {
-  const normalizedName = name.toLowerCase();
-
-  if (normalizedName.includes("wash")) {
+function ServiceIcon({ serviceId, className = "h-6 w-6" }) {
+  if (serviceId === "washing") {
     return (
       <svg
         viewBox="0 0 24 24"
@@ -74,7 +79,7 @@ function ServiceIcon({ name = "", className = "h-6 w-6" }) {
     );
   }
 
-  if (normalizedName.includes("iron")) {
+  if (serviceId === "ironing") {
     return (
       <svg
         viewBox="0 0 24 24"
@@ -93,25 +98,6 @@ function ServiceIcon({ name = "", className = "h-6 w-6" }) {
     );
   }
 
-  if (normalizedName.includes("dry")) {
-    return (
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className={className}
-      >
-        <path d="M12 6a2.5 2.5 0 1 0-2.5-2.5" />
-        <path d="M9.5 3.5H12a3 3 0 0 1 3 3v.4l5 3.8" />
-        <path d="m5 11 7 6 7-6" />
-        <path d="M7 12.7V18h10v-5.3" />
-      </svg>
-    );
-  }
-
   return (
     <svg
       viewBox="0 0 24 24"
@@ -122,61 +108,58 @@ function ServiceIcon({ name = "", className = "h-6 w-6" }) {
       strokeLinejoin="round"
       className={className}
     >
-      <rect x="4" y="7" width="16" height="11" rx="2" />
-      <path d="M8 11h8" />
-      <path d="M8 15h5" />
-      <path d="M8 7V5h8v2" />
+      <path d="M12 6a2.5 2.5 0 1 0-2.5-2.5" />
+      <path d="M9.5 3.5H12a3 3 0 0 1 3 3v.4l5 3.8" />
+      <path d="m5 11 7 6 7-6" />
+      <path d="M7 12.7V18h10v-5.3" />
     </svg>
   );
 }
 
+function CheckIcon({ className = "h-4 w-4" }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <path d="m5 13 4 4L19 7" />
+    </svg>
+  );
+}
+
+function FieldIcon({ children }) {
+  return (
+    <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-slate-400">
+      {children}
+    </div>
+  );
+}
+
 export default function Book() {
-  const [services, setServices] = useState([]);
-  const [service, setService] = useState("");
+  const [selectedServiceId, setSelectedServiceId] = useState("");
   const [address, setAddress] = useState("");
   const [mobileNumber, setMobileNumber] = useState("");
-  const [isLoadingServices, setIsLoadingServices] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const toast = useToast();
 
-  async function getServices() {
-    const { data, error } = await supabase.from("services").select("*");
-    return { data: data || [], error };
-  }
+  const selectedService =
+    SERVICE_OPTIONS.find((option) => option.id === selectedServiceId) || null;
 
-  useEffect(() => {
-    let isMounted = true;
+  async function handleSubmit(event) {
+    event.preventDefault();
 
-    getServices().then(({ data, error }) => {
-      if (isMounted) {
-        setServices(data);
-        setIsLoadingServices(false);
-
-        if (error) {
-          toast.error(
-            "Unable to load services",
-            error.message || "Try refreshing the page."
-          );
-        }
-      }
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [toast]);
-
-  const selectedService = services.find((item) => item.name === service) || null;
-  const selectedServiceMeta = getServiceMeta(selectedService?.name);
-
-  async function handleSubmit() {
     const trimmedAddress = address.trim();
     const normalizedMobileNumber = normalizeMobileNumber(mobileNumber);
 
-    if (!service || !trimmedAddress || !mobileNumber.trim()) {
+    if (!selectedService || !trimmedAddress || !mobileNumber.trim()) {
       toast.error(
         "Missing details",
-        "Please select a service, enter your address, and add a mobile number."
+        "Please choose a service, enter your address, and add a mobile number."
       );
       return;
     }
@@ -191,234 +174,192 @@ export default function Book() {
 
     setIsSubmitting(true);
 
-    const { error } = await supabase.from("orders").insert([
-      {
-        service_id: service,
-        address: trimmedAddress,
-        mobile_number: normalizedMobileNumber,
-      },
-    ]);
+    try {
+      const { error } = await supabase.from("orders").insert([
+        {
+          service_id: selectedService.name,
+          address: trimmedAddress,
+          mobile_number: normalizedMobileNumber,
+        },
+      ]);
 
-    if (!error) {
+      if (error) {
+        throw error;
+      }
+
       toast.success(
         "Booking confirmed",
-        "Your laundry order was placed successfully."
+        `${selectedService.name} has been booked successfully.`
       );
-      setService("");
+
+      setSelectedServiceId("");
       setAddress("");
       setMobileNumber("");
-    } else {
+    } catch (error) {
       toast.error("Booking failed", error.message || "Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setIsSubmitting(false);
   }
 
   return (
-    <div className="relative overflow-hidden bg-slate-50 px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-12">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.18),_transparent_32%),radial-gradient(circle_at_bottom_right,_rgba(16,185,129,0.14),_transparent_28%)]" />
+    <div className="min-h-[calc(100vh-5rem)] bg-slate-100 px-4 py-10 sm:px-6 lg:px-8">
+      <div className="mx-auto flex max-w-5xl items-center justify-center">
+        <section className="w-full max-w-4xl rounded-[32px] border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/80 sm:p-8 lg:p-10">
+          <div className="mx-auto max-w-2xl text-center">
+            <span className="inline-flex rounded-full bg-slate-100 px-4 py-1.5 text-sm font-medium text-slate-600">
+              Simple laundry booking
+            </span>
+            <h1 className="mt-4 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
+              Book your laundry pickup
+            </h1>
+            <p className="mt-3 text-sm leading-7 text-slate-600 sm:text-base">
+              Select a service, add your pickup details, and confirm your booking
+              in one clean flow.
+            </p>
+          </div>
 
-      <div className="relative mx-auto flex min-h-[calc(100vh-5rem)] max-w-5xl items-center">
-        <div className="grid w-full overflow-hidden rounded-[32px] border border-white/70 bg-white shadow-2xl shadow-slate-200/70 lg:grid-cols-[1.05fr_0.95fr]">
-          <section className="bg-slate-950 px-6 py-8 text-white sm:px-8 sm:py-10">
-            <div className="max-w-md">
-              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-sky-200">
-                Booking
-              </p>
-              <h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
-                Book Laundry Service
-              </h1>
-              <p className="mt-4 text-sm leading-7 text-slate-300 sm:text-base">
-                Choose a service, confirm your pickup address, and keep the
-                process simple from request to delivery.
-              </p>
-            </div>
+          <form onSubmit={handleSubmit} className="mt-8 space-y-8">
+            <div>
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">
+                    Choose a service
+                  </p>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Tap a card to select the laundry service you need.
+                  </p>
+                </div>
+                <span className="hidden text-xs font-medium uppercase tracking-[0.22em] text-slate-400 sm:inline">
+                  3 options
+                </span>
+              </div>
 
-            <div className="mt-8 space-y-3">
-              {isLoadingServices ? (
-                <div className="flex h-48 items-center justify-center rounded-2xl border border-white/10 bg-white/5">
-                  <div className="flex flex-col items-center gap-3 text-sm text-slate-300">
-                    <LoadingSpinner size="lg" tone="light" />
-                    <p>Loading services...</p>
-                  </div>
-                </div>
-              ) : services.length === 0 ? (
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-slate-300">
-                  No services are available right now.
-                </div>
-              ) : (
-                services.map((item) => {
-                  const meta = getServiceMeta(item.name);
-                  const isSelected = item.name === service;
+              <div className="mt-5 grid gap-4 md:grid-cols-3">
+                {SERVICE_OPTIONS.map((option) => {
+                  const isSelected = option.id === selectedServiceId;
 
                   return (
-                    <div
-                      key={item.id}
-                      className={`flex items-center gap-4 rounded-2xl border p-4 transition-all duration-300 ${
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => setSelectedServiceId(option.id)}
+                      aria-pressed={isSelected}
+                      className={`group relative overflow-hidden rounded-3xl border p-5 text-left transition-all duration-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-slate-200 ${
                         isSelected
-                          ? "border-white/30 bg-white/15 translate-x-1"
-                          : "border-white/10 bg-white/5 hover:-translate-y-0.5 hover:bg-white/8"
+                          ? `${option.cardBg} ${option.cardBorder} ${option.ring} scale-[1.02] shadow-lg shadow-slate-200 ring-2`
+                          : "border-slate-200 bg-slate-50/80 hover:-translate-y-1 hover:scale-[1.02] hover:border-slate-300 hover:bg-white hover:shadow-lg"
                       }`}
                     >
                       <div
-                        className={`rounded-2xl bg-gradient-to-br ${meta.gradient} p-3 text-white shadow-lg shadow-black/20`}
-                      >
-                        <ServiceIcon name={item.name} />
+                        className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${option.accent}`}
+                      />
+
+                      <div className="flex items-start justify-between gap-3">
+                        <div
+                          className={`inline-flex h-12 w-12 items-center justify-center rounded-2xl ${option.iconBg} ${option.iconText}`}
+                        >
+                          <ServiceIcon serviceId={option.id} />
+                        </div>
+
+                        {isSelected ? (
+                          <span
+                            className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${option.badge}`}
+                          >
+                            <CheckIcon />
+                            Selected
+                          </span>
+                        ) : null}
                       </div>
 
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-white">{item.name}</p>
-                        <p className="mt-1 text-sm text-slate-300">
-                          {meta.description}
-                        </p>
-                      </div>
+                      <h2 className="mt-5 text-xl font-semibold text-slate-950">
+                        {option.name}
+                      </h2>
+                      <p className="mt-2 text-sm leading-6 text-slate-600">
+                        {option.description}
+                      </p>
 
-                      <div className="text-right">
-                        <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
-                          Price
-                        </p>
-                        <p className="mt-1 text-sm font-semibold text-white">
-                          Rs. {item.price}
-                        </p>
+                      <div className="mt-6 flex items-end justify-between gap-4">
+                        <div>
+                          <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-400">
+                            Price
+                          </p>
+                          <p className="mt-1 text-2xl font-semibold text-slate-950">
+                            ₹{option.price}
+                          </p>
+                        </div>
+
+                        <span
+                          className={`text-sm font-medium transition-colors ${
+                            isSelected
+                              ? "text-slate-900"
+                              : "text-slate-500 group-hover:text-slate-900"
+                          }`}
+                        >
+                          {isSelected ? "Selected" : "Select"}
+                        </span>
                       </div>
-                    </div>
+                    </button>
                   );
-                })
-              )}
-            </div>
-          </section>
-
-          <section className="px-6 py-8 sm:px-8 sm:py-10">
-            <div className="max-w-md">
-              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-sky-700">
-                Details
-              </p>
-              <h2 className="mt-4 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">
-                Schedule your next pickup
-              </h2>
-              <p className="mt-3 text-sm leading-7 text-slate-600 sm:text-base">
-                Pick a service from the list and enter the address and mobile
-                number we should use for your laundry pickup.
-              </p>
-            </div>
-
-            <div className="mt-8 space-y-5">
-              <div>
-                <label
-                  htmlFor="service"
-                  className="mb-2 block text-sm font-medium text-slate-700"
-                >
-                  Select service
-                </label>
-                <div className="relative">
-                  <select
-                    id="service"
-                    value={service}
-                    onChange={(e) => setService(e.target.value)}
-                    className="w-full appearance-none rounded-2xl border border-slate-200 bg-white px-4 py-3 pr-12 text-sm text-slate-900 shadow-sm transition-all duration-200 hover:border-sky-300 focus:border-sky-400 focus:outline-none focus:ring-4 focus:ring-sky-100"
-                  >
-                    <option value="">Choose a service</option>
-                    {services.map((item) => (
-                      <option key={item.id} value={item.name}>
-                        {item.name} - Rs. {item.price}
-                      </option>
-                    ))}
-                  </select>
-
-                  <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-slate-400">
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="h-5 w-5"
-                    >
-                      <path d="m6 9 6 6 6-6" />
-                    </svg>
-                  </div>
-                </div>
+                })}
               </div>
+            </div>
 
-              <div
-                className={`rounded-2xl border p-4 transition-all duration-300 ${
-                  selectedService
-                    ? `${selectedServiceMeta.border} ${selectedServiceMeta.bg} shadow-sm`
-                    : "border-dashed border-slate-200 bg-slate-50"
-                }`}
-              >
-                {selectedService ? (
+            <div
+              className={`rounded-3xl border p-5 transition-all duration-300 ${
+                selectedService
+                  ? `${selectedService.cardBg} ${selectedService.cardBorder}`
+                  : "border-dashed border-slate-200 bg-slate-50"
+              }`}
+            >
+              {selectedService ? (
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-start gap-4">
                     <div
-                      className={`rounded-2xl bg-gradient-to-br ${selectedServiceMeta.gradient} p-3 text-white shadow-lg shadow-slate-300/60`}
+                      className={`inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${selectedService.accent} text-white shadow-lg shadow-slate-200`}
                     >
-                      <ServiceIcon name={selectedService.name} />
+                      <ServiceIcon
+                        serviceId={selectedService.id}
+                        className="h-7 w-7"
+                      />
                     </div>
 
-                    <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-slate-950">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">
+                        Selected service
+                      </p>
+                      <p className="mt-1 text-lg font-semibold text-slate-950">
                         {selectedService.name}
                       </p>
                       <p className="mt-1 text-sm leading-6 text-slate-600">
-                        {selectedServiceMeta.description}
-                      </p>
-                    </div>
-
-                    <div className="text-right">
-                      <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
-                        Price
-                      </p>
-                      <p className="mt-1 text-lg font-semibold text-slate-950">
-                        Rs. {selectedService.price}
+                        {selectedService.description}
                       </p>
                     </div>
                   </div>
-                ) : (
-                  <div className="text-sm text-slate-500">
-                    Select a service to see its icon and price summary here.
-                  </div>
-                )}
-              </div>
 
-              <div>
-                <label
-                  htmlFor="mobileNumber"
-                  className="mb-2 block text-sm font-medium text-slate-700"
-                >
-                  Mobile number
-                </label>
-                <div className="relative">
-                  <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-slate-400">
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="h-5 w-5"
+                  <div className="flex items-center gap-3">
+                    <span className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-slate-200">
+                      ₹{selectedService.price}
+                    </span>
+                    <span
+                      className={`inline-flex items-center gap-1 rounded-full px-3 py-2 text-sm font-medium ${selectedService.badge}`}
                     >
-                      <path d="M7 4h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" />
-                      <path d="M11 17h2" />
-                    </svg>
+                      <CheckIcon />
+                      Ready
+                    </span>
                   </div>
-
-                  <input
-                    id="mobileNumber"
-                    type="tel"
-                    inputMode="numeric"
-                    placeholder="Enter mobile number"
-                    value={mobileNumber}
-                    onChange={(e) => setMobileNumber(e.target.value)}
-                    className="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-12 pr-4 text-sm text-slate-900 shadow-sm transition-all duration-200 hover:border-sky-300 focus:border-sky-400 focus:outline-none focus:ring-4 focus:ring-sky-100"
-                  />
                 </div>
-                <p className="mt-2 text-xs text-slate-500">
-                  This number is required and will be used for order tracking.
-                </p>
-              </div>
+              ) : (
+                <div className="flex flex-col gap-2 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+                  <p>Select a service card above to continue with your booking.</p>
+                  <span className="font-medium text-slate-400">
+                    Your selection will appear here
+                  </span>
+                </div>
+              )}
+            </div>
 
+            <div className="grid gap-5">
               <div>
                 <label
                   htmlFor="address"
@@ -427,7 +368,7 @@ export default function Book() {
                   Pickup address
                 </label>
                 <div className="relative">
-                  <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-slate-400">
+                  <FieldIcon>
                     <svg
                       viewBox="0 0 24 24"
                       fill="none"
@@ -440,41 +381,81 @@ export default function Book() {
                       <path d="M12 21s6-4.4 6-10a6 6 0 1 0-12 0c0 5.6 6 10 6 10Z" />
                       <path d="M12 13.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
                     </svg>
-                  </div>
+                  </FieldIcon>
 
                   <input
                     id="address"
                     type="text"
-                    placeholder="Enter pickup address"
+                    autoComplete="street-address"
+                    placeholder="Enter your pickup address"
                     value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    className="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-12 pr-4 text-sm text-slate-900 shadow-sm transition-all duration-200 hover:border-sky-300 focus:border-sky-400 focus:outline-none focus:ring-4 focus:ring-sky-100"
+                    onChange={(event) => setAddress(event.target.value)}
+                    className={inputClasses}
                   />
                 </div>
               </div>
 
-              <button
-                onClick={handleSubmit}
-                disabled={
-                  isSubmitting ||
-                  !service ||
-                  !address.trim() ||
-                  !mobileNumber.trim()
-                }
-                className="inline-flex w-full items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-950/15 transition-all duration-200 hover:-translate-y-0.5 hover:bg-sky-600 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
-              >
-                {isSubmitting ? (
-                  <span className="inline-flex items-center gap-2">
-                    <LoadingSpinner size="sm" tone="light" />
-                    Booking...
-                  </span>
-                ) : (
-                  "Confirm Booking"
-                )}
-              </button>
+              <div>
+                <label
+                  htmlFor="mobileNumber"
+                  className="mb-2 block text-sm font-medium text-slate-700"
+                >
+                  Mobile number
+                </label>
+                <div className="relative">
+                  <FieldIcon>
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="h-5 w-5"
+                    >
+                      <path d="M7 4h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" />
+                      <path d="M11 17h2" />
+                    </svg>
+                  </FieldIcon>
+
+                  <input
+                    id="mobileNumber"
+                    type="tel"
+                    inputMode="numeric"
+                    autoComplete="tel"
+                    placeholder="Enter mobile number"
+                    value={mobileNumber}
+                    onChange={(event) => setMobileNumber(event.target.value)}
+                    className={inputClasses}
+                  />
+                </div>
+                <p className="mt-2 text-xs text-slate-500">
+                  We use this number for booking updates and order tracking.
+                </p>
+              </div>
             </div>
-          </section>
-        </div>
+
+            <button
+              type="submit"
+              disabled={
+                isSubmitting ||
+                !selectedService ||
+                !address.trim() ||
+                !mobileNumber.trim()
+              }
+              className="inline-flex w-full items-center justify-center rounded-2xl bg-slate-950 px-6 py-4 text-base font-semibold text-white shadow-lg shadow-slate-950/15 transition-all duration-300 hover:-translate-y-0.5 hover:bg-sky-600 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
+            >
+              {isSubmitting ? (
+                <span className="inline-flex items-center gap-2">
+                  <LoadingSpinner size="sm" tone="light" />
+                  Confirming booking...
+                </span>
+              ) : (
+                "Confirm Booking"
+              )}
+            </button>
+          </form>
+        </section>
       </div>
     </div>
   );
